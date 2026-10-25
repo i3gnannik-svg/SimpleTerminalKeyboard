@@ -344,12 +344,23 @@ int compute_new_col(int visual_offset, int old_row, int new_row) {
 static int rgb30_first_jbutton10_pressed = 0;  // TODO: temp fix for RGB30, for unknown reason, Joystick jbutton 10 (KEY_QUIT) always triggers at startup, so we must ignore it
 #endif
 int handle_keyboard_event(SDL_Event *event) {
-    // === БЛОК ДЛЯ ФИЗИЧЕСКОЙ КЛАВИАТУРЫ ===
+        // === БЛОК ДЛЯ ФИЗИЧЕСКОЙ КЛАВИАТУРЫ ===
     // Если это обычное нажатие клавиши (не синтетическое) и OSK активна
     if (event->key.type == SDL_KEYDOWN && !(event->key.keysym.mod & KMOD_SYNTHETIC) && active) {
         SDL_Keycode sym = event->key.keysym.sym;
         
-        // Обрабатываем печатные символы (буквы, цифры, знаки)
+        // 1. СНАЧАЛА ЛОВИМ ПРОКРУТКУ ПО ФИЗИЧЕСКОМУ КОДУ КЛАВИШИ (Scancode)
+        // 75 - это Page Up, 78 - это Page Down
+        if (event->key.keysym.scancode == 75) { 
+            simulate_key(KEY_SCROLLUP, STATE_TYPED); 
+            return 1; 
+        }
+        if (event->key.keysym.scancode == 78) { 
+            simulate_key(KEY_SCROLLDOWN, STATE_TYPED); 
+            return 1; 
+        }
+
+        // 2. Обрабатываем печатные символы (буквы, цифры, знаки)
         if ((sym >= SDLK_a && sym <= SDLK_z) || 
             (sym >= SDLK_0 && sym <= SDLK_9) || 
             sym == SDLK_SPACE || sym == SDLK_PERIOD || sym == SDLK_COMMA || 
@@ -360,8 +371,6 @@ int handle_keyboard_event(SDL_Event *event) {
                 if (sym >= SDLK_a && sym <= SDLK_z) {
                     simulate_key(sym - 32, STATE_TYPED);
                 } else {
-                    // Для цифр и знаков со Shift можно добавить свои соответствия, 
-                    // но пока просто отправим как есть
                     simulate_key(sym, STATE_TYPED);
                 }
             } else {
@@ -370,7 +379,7 @@ int handle_keyboard_event(SDL_Event *event) {
             return 1;
         }
         
-        // Обрабатываем Enter, Backspace и Tab
+        // 3. Обрабатываем Enter, Backspace и Tab
         if (sym == SDLK_RETURN || sym == SDLK_KP_ENTER) {
             simulate_key(SDLK_RETURN, STATE_TYPED);
             return 1;
@@ -384,19 +393,13 @@ int handle_keyboard_event(SDL_Event *event) {
             return 1;
         }
         
-        // Обрабатываем стрелки (если OSK выключена, они будут работать как в обычном терминале)
+        // 4. Обрабатываем стрелки
         if (!active) {
             if (sym == SDLK_UP) { simulate_key(SDLK_UP, STATE_TYPED); return 1; }
             if (sym == SDLK_DOWN) { simulate_key(SDLK_DOWN, STATE_TYPED); return 1; }
             if (sym == SDLK_LEFT) { simulate_key(SDLK_LEFT, STATE_TYPED); return 1; }
             if (sym == SDLK_RIGHT) { simulate_key(SDLK_RIGHT, STATE_TYPED); return 1; }
         }
-
-        // === НОВЫЕ СТРОКИ ДЛЯ ПРОКРУТКИ ===
-        // Симулируем нажатие кнопок L2/R2 геймпада при нажатии F8/F7 на клавиатуре
-        if (sym == SDLK_PAGEUP) { simulate_key(KEY_SCROLLUP, STATE_TYPED); return 1; }
-        if (sym == SDLK_PAGEDOWN) { simulate_key(KEY_SCROLLDOWN, STATE_TYPED); return 1; }
-        // ==================================
     }
     // =======================================
     if (event->key.type == SDL_KEYDOWN && event->key.keysym.sym == KEY_QUIT) {

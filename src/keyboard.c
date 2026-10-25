@@ -48,7 +48,7 @@ static int shifted = 0;
 static int location = 0;
 static int mod_state = 0;
 
-int active = 1;
+int active = 0;
 int show_help = 1;
 
 static int embedded_font_name = 1;  // 1 or 2

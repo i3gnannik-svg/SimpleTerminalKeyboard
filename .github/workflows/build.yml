@@ -8,20 +8,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install dependencies and cross-compilers
+    - name: Build inside Debian container
       run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential make pkg-config gcc-aarch64-linux-gnu libc6-dev-arm64-cross libsdl2-dev:arm64 libsdl2-ttf-dev:arm64
+        docker run --rm -v "$PWD:/work" -w /work debian:trixie-slim bash -c "
+          set -e
+          dpkg --add-architecture arm64
+          apt-get update
+          apt-get install -y --no-install-recommends make pkg-config gcc-aarch64-linux-gnu libc6-dev-arm64-cross libsdl2-dev:arm64 libsdl2-ttf-dev:arm64
+          export CC=aarch64-linux-gnu-gcc
+          export PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig
+          export PKG_CONFIG_SYSROOT_DIR=/
+          make clean || true
+          make PLATFORM=h700 CC=\"\$CC\" || make PLATFORM=r36s CC=\"\$CC\" || make CC=\"\$CC\"
+        "
 
-    - name: Build
-      run: |
-        export CC=aarch64-linux-gnu-gcc
-        export PKG_CONFIG_LIBDIR=/usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig
-        export PKG_CONFIG_SYSROOT_DIR=/
-        make PLATFORM=r36s CC="$CC" || make PLATFORM=h700 CC="$CC" || make CC="$CC"
-
-    - name: Upload Artifact
+    - name: Find and Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: simple-terminal-arm64
-        path: simple-terminal
+        path: |
+          simple-terminal
+          src/simple-terminal
+        if-no-files-found: error

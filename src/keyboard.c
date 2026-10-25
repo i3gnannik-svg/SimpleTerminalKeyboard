@@ -394,8 +394,8 @@ int handle_keyboard_event(SDL_Event *event) {
 
         // === НОВЫЕ СТРОКИ ДЛЯ ПРОКРУТКИ ===
         // Симулируем нажатие кнопок L2/R2 геймпада при нажатии F8/F7 на клавиатуре
-        if (sym == SDLK_F8) { simulate_key(KEY_SCROLLUP, STATE_TYPED); return 1; }
-        if (sym == SDLK_F7) { simulate_key(KEY_SCROLLDOWN, STATE_TYPED); return 1; }
+        if (sym == SDLK_PAGEUP) { simulate_key(KEY_SCROLLUP, STATE_TYPED); return 1; }
+        if (sym == SDLK_PAGEDOWN) { simulate_key(KEY_SCROLLDOWN, STATE_TYPED); return 1; }
         // ==================================
     }
     // =======================================

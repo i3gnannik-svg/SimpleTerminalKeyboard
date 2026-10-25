@@ -130,3 +130,4 @@ https://simple-terminal.vercel.app/embedded-font-editor
 MIT License  
 Based on Aurélien APTEL <aurelien dot aptel at gmail dot com> bt source code.  
 https://github.com/benob/rs97_st-sdl
+by Demon

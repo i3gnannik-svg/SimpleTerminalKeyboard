@@ -344,6 +344,55 @@ int compute_new_col(int visual_offset, int old_row, int new_row) {
 static int rgb30_first_jbutton10_pressed = 0;  // TODO: temp fix for RGB30, for unknown reason, Joystick jbutton 10 (KEY_QUIT) always triggers at startup, so we must ignore it
 #endif
 int handle_keyboard_event(SDL_Event *event) {
+    // === БЛОК ДЛЯ ФИЗИЧЕСКОЙ КЛАВИАТУРЫ ===
+    // Если это обычное нажатие клавиши (не синтетическое) и OSK активна
+    if (event->key.type == SDL_KEYDOWN && !(event->key.keysym.mod & KMOD_SYNTHETIC) && active) {
+        SDL_Keycode sym = event->key.keysym.sym;
+        
+        // Обрабатываем печатные символы (буквы, цифры, знаки)
+        if ((sym >= SDLK_a && sym <= SDLK_z) || 
+            (sym >= SDLK_0 && sym <= SDLK_9) || 
+            sym == SDLK_SPACE || sym == SDLK_PERIOD || sym == SDLK_COMMA || 
+            sym == SDLK_MINUS || sym == SDLK_EQUALS || sym == SDLK_SLASH) {
+            
+            // Учитываем Shift для заглавных букв и спецсимволов
+            if (event->key.keysym.mod & KMOD_SHIFT) {
+                if (sym >= SDLK_a && sym <= SDLK_z) {
+                    simulate_key(sym - 32, STATE_TYPED);
+                } else {
+                    // Для цифр и знаков со Shift можно добавить свои соответствия, 
+                    // но пока просто отправим как есть
+                    simulate_key(sym, STATE_TYPED);
+                }
+            } else {
+                simulate_key(sym, STATE_TYPED);
+            }
+            return 1;
+        }
+        
+        // Обрабатываем Enter, Backspace и Tab
+        if (sym == SDLK_RETURN || sym == SDLK_KP_ENTER) {
+            simulate_key(SDLK_RETURN, STATE_TYPED);
+            return 1;
+        }
+        if (sym == SDLK_BACKSPACE) {
+            simulate_key(SDLK_BACKSPACE, STATE_TYPED);
+            return 1;
+        }
+        if (sym == SDLK_TAB) {
+            simulate_key(SDLK_TAB, STATE_TYPED);
+            return 1;
+        }
+        
+        // Обрабатываем стрелки (если OSK выключена, они будут работать как в обычном терминале)
+        if (!active) {
+            if (sym == SDLK_UP) { simulate_key(SDLK_UP, STATE_TYPED); return 1; }
+            if (sym == SDLK_DOWN) { simulate_key(SDLK_DOWN, STATE_TYPED); return 1; }
+            if (sym == SDLK_LEFT) { simulate_key(SDLK_LEFT, STATE_TYPED); return 1; }
+            if (sym == SDLK_RIGHT) { simulate_key(SDLK_RIGHT, STATE_TYPED); return 1; }
+        }
+    }
+    // =======================================
     if (event->key.type == SDL_KEYDOWN && event->key.keysym.sym == KEY_QUIT) {
 #if defined(RGB30)
         if (!rgb30_first_jbutton10_pressed) {
